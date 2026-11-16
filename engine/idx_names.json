@@ -1,0 +1,358 @@
+{
+"BBCA": [
+"Bank Central Asia",
+"Financials"
+],
+"BBRI": [
+"Bank Rakyat Indonesia",
+"Financials"
+],
+"BMRI": [
+"Bank Mandiri",
+"Financials"
+],
+"BBNI": [
+"Bank Negara Indonesia",
+"Financials"
+],
+"BRIS": [
+"Bank Syariah Indonesia",
+"Financials"
+],
+"BBTN": [
+"Bank Tabungan Negara",
+"Financials"
+],
+"ARTO": [
+"Bank Jago",
+"Financials"
+],
+"BNGA": [
+"Bank CIMB Niaga",
+"Financials"
+],
+"NISP": [
+"Bank OCBC NISP",
+"Financials"
+],
+"PNBN": [
+"Bank Pan Indonesia",
+"Financials"
+],
+"BTPS": [
+"Bank BTPN Syariah",
+"Financials"
+],
+"BDMN": [
+"Bank Danamon Indonesia",
+"Financials"
+],
+"MEGA": [
+"Bank Mega",
+"Financials"
+],
+"TLKM": [
+"Perusahaanan PT Telekomunikasi Indonesia",
+"Infrastructures"
+],
+"ISAT": [
+"Indosat",
+"Infrastructures"
+],
+"EXCL": [
+"XLSMART Telecom Sejahtera",
+"Infrastructures"
+],
+"TOWR": [
+"Sarana Menara Nusantara",
+"Properties"
+],
+"TBIG": [
+"Tower Bersama Infrastructure",
+"Infrastructures"
+],
+"MTEL": [
+"Dayamitra Telekomunikasi",
+"Infrastructures"
+],
+"JSMR": [
+"Jasa Marga",
+"Industrials"
+],
+"PGEO": [
+"Pertamina Geothermal Energy",
+"Infrastructures"
+],
+"ASII": [
+"Astra International",
+"Industrials"
+],
+"UNTR": [
+"United Tractors",
+"Basic Materials"
+],
+"AALI": [
+"Astra Agro Lestari",
+"Consumer Non-Cyclicals"
+],
+"LSIP": [
+"Perusahaan Perkebunan London Sumatra Indonesia",
+"Consumer Non-Cyclicals"
+],
+"UNVR": [
+"Unilever Indonesia",
+"Consumer Non-Cyclicals"
+],
+"ICBP": [
+"Indofood CBP Sukses Makmur",
+"Consumer Non-Cyclicals"
+],
+"INDF": [
+"Indofood Sukses Makmur",
+"Consumer Non-Cyclicals"
+],
+"CPIN": [
+"Charoen Pokphand Indonesia",
+"Consumer Non-Cyclicals"
+],
+"JPFA": [
+"Japfa Comfeed Indonesia",
+"Consumer Non-Cyclicals"
+],
+"MYOR": [
+"Mayora Indah",
+"Consumer Non-Cyclicals"
+],
+"KLBF": [
+"Kalbe Farma",
+"Healthcare"
+],
+"SIDO": [
+"Industri Jamu dan Farmasi Sido Muncul",
+"Consumer Non-Cyclicals"
+],
+"AMRT": [
+"Sumber Alfaria Trijaya",
+"Consumer Non-Cyclicals"
+],
+"MAPI": [
+"Mitra Adiperkasa",
+"Consumer Cyclicals"
+],
+"MAPA": [
+"Map Aktif Adiperkasa",
+"Consumer Cyclicals"
+],
+"ACES": [
+"Aspirasi Hidup Indonesia",
+"Consumer Cyclicals"
+],
+"ERAA": [
+"Erajaya Swasembada",
+"Consumer Cyclicals"
+],
+"GGRM": [
+"Gudang Garam",
+"Consumer Non-Cyclicals"
+],
+"HMSP": [
+"Hanjaya Mandala Sampoerna",
+"Consumer Non-Cyclicals"
+],
+"ULTJ": [
+"Ultrajaya Milk Industry & Trading Company",
+"Consumer Non-Cyclicals"
+],
+"CMRY": [
+"Cisarua Mountain Dairy",
+"Consumer Non-Cyclicals"
+],
+"MIKA": [
+"Mitra Keluarga Karyasehat",
+"Healthcare"
+],
+"HEAL": [
+"Medikaloka Hermina",
+"Healthcare"
+],
+"SILO": [
+"Siloam International Hospitals",
+"Healthcare"
+],
+"AVIA": [
+"Avia Avian",
+"Basic Materials"
+],
+"GOTO": [
+"GoTo Gojek Tokopedia",
+"Technology"
+],
+"BUKA": [
+"Bukalapak.com",
+"Consumer Cyclicals"
+],
+"EMTK": [
+"Elang Mahkota Teknologi",
+"Infrastructures"
+],
+"SCMA": [
+"Surya Citra Media",
+"Infrastructures"
+],
+"MNCN": [
+"Media Nusantara Citra",
+"Infrastructures"
+],
+"AMMN": [
+"Amman Mineral Internasional",
+"Basic Materials"
+],
+"BREN": [
+"Barito Renewables Energy",
+"Infrastructures"
+],
+"BYAN": [
+"Bayan Resources",
+"Energy"
+],
+"ADRO": [
+"Alamtri Resources Indonesia",
+"Energy"
+],
+"AADI": [
+"Adaro Andalan Indonesia",
+"Energy"
+],
+"PTBA": [
+"Bukit Asam",
+"Energy"
+],
+"ITMG": [
+"Indo Tambangraya Megah",
+"Energy"
+],
+"MEDC": [
+"Medco Energi Internasional",
+"Energy"
+],
+"PGAS": [
+"Perusahaan Gas Negara",
+"Infrastructures"
+],
+"AKRA": [
+"AKR Corporindo",
+"Energy"
+],
+"HRUM": [
+"Harum Energy",
+"Basic Materials"
+],
+"INDY": [
+"Indika Energy",
+"Energy"
+],
+"ADMR": [
+"Alamtri Minerals Indonesia",
+"Basic Materials"
+],
+"ENRG": [
+"Energi Mega Persada",
+"Energy"
+],
+"RAJA": [
+"Rukun Raharja",
+"Infrastructures"
+],
+"ESSA": [
+"ESSA Industries Indonesia",
+"Basic Materials"
+],
+"DSSA": [
+"Dian Swastatika Sentosa",
+"Energy"
+],
+"PTRO": [
+"Petrosea",
+"Basic Materials"
+],
+"CUAN": [
+"Petrindo Jaya Kreasi",
+"Energy"
+],
+"ANTM": [
+"Antam",
+"Basic Materials"
+],
+"INCO": [
+"Vale Indonesia",
+"Basic Materials"
+],
+"MDKA": [
+"Merdeka Copper Gold",
+"Basic Materials"
+],
+"MBMA": [
+"Merdeka Battery Materials",
+"Basic Materials"
+],
+"NCKL": [
+"Trimegah Bangun Persada",
+"Basic Materials"
+],
+"TINS": [
+"TIMAH",
+"Basic Materials"
+],
+"BRMS": [
+"Bumi Resources Minerals",
+"Basic Materials"
+],
+"BRPT": [
+"Barito Pacific",
+"Basic Materials"
+],
+"TPIA": [
+"Chandra Asri Pacific",
+"Basic Materials"
+],
+"INKP": [
+"Indah Kiat Pulp & Paper",
+"Basic Materials"
+],
+"TKIM": [
+"Pabrik Kertas Tjiwi Kimia",
+"Basic Materials"
+],
+"SMGR": [
+"Semen Indonesia",
+"Basic Materials"
+],
+"INTP": [
+"Indocement Tunggal Prakarsa",
+"Basic Materials"
+],
+"CTRA": [
+"Ciputra Development",
+"Properties"
+],
+"BSDE": [
+"Bumi Serpong Damai",
+"Properties"
+],
+"PWON": [
+"Pakuwon Jati",
+"Properties"
+],
+"SMRA": [
+"Summarecon Agung",
+"Properties"
+],
+"PANI": [
+"Pantai Indah Kapuk Dua",
+"Properties"
+],
+"SRTG": [
+"Saratoga Investama Sedaya",
+"Financials"
+]
+}

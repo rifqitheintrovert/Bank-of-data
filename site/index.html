@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bank of Data Terminal</title>
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BoD">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/terminal.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">BOD</span><span class="brand-sub">BANK OF DATA</span></div>
+  <form class="cmdwrap" id="cmdform" autocomplete="off">
+    <span class="prompt" id="prompt" title="Panel aktif">1</span>
+    <input id="cmd" spellcheck="false" autocapitalize="characters" aria-label="Perintah" placeholder="BBCA GP · MEDC FA · XAUUSD · WEI · HELP  lalu Enter" list="cmdlist">
+    <datalist id="cmdlist"></datalist>
+    <button type="submit" class="go">&lt;GO&gt;</button>
+  </form>
+  <div class="layoutbtns" id="layouts">
+    <button data-l="1" title="1 panel" aria-label="1 panel">1</button><button data-l="2" title="2 panel" aria-label="2 panel">2</button><button data-l="4" title="4 panel" aria-label="4 panel">4</button>
+  </div>
+  <div class="clocks" id="clocks"></div>
+</header>
+<div id="banner"></div>
+<div class="tape"><div class="tapein" id="tape"></div></div>
+<nav class="fkeys" id="fkeys"></nav>
+<main class="panes l4" id="panes"></main>
+<footer class="bot">
+  <div class="status" id="status"></div>
+  <div class="credit">Data: Yahoo Finance, Binance, FRED, World Bank, Google News, CNBC Indonesia · Chart: <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView Lightweight Charts™</a> (Apache-2.0)</div>
+</footer>
+<div class="toasts" id="toasts"></div>
+<script src="vendor/lightweight-charts.standalone.production.js"></script>
+<script src="js/util.js"></script>
+<script src="js/data.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/funcs1.js"></script>
+<script src="js/funcs2.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
