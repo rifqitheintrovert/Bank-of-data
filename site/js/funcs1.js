@@ -172,7 +172,7 @@
 
   /* ---- DES: deskripsi ---- */
   reg("DES", "Deskripsi instrumen", "Harga, return, volatilitas, profil dan valuasi emiten", true, async (p, alive) => {
-    const s = U[p.sec], dp = T.dp(s);
+    const s = U[p.sec], dp = T.dp(s), xs = (v, d) => v == null || isNaN(v) ? "-" : T.num(v, d) + "x";
     let f = null;
     const draw = () => {
       const pos = s.hi > s.lo ? (s.px - s.lo) / (s.hi - s.lo) * 100 : 50, kv = rows => `<div class="kv">${rows.filter(Boolean).map(r => `<div>${r[0]}</div><div>${r[1]}</div>`).join("")}</div>`;
@@ -186,11 +186,11 @@
       if (s.type === "EQUITY") {
         if (f) {
           const dy = f.dps && s.px ? f.dps / s.px : null, up = f.tp && s.px ? f.tp / s.px - 1 : null;
-          h += `<div class="cols"><div><div class="sec">VALUASI</div>${kv([["Kapitalisasi pasar", T.big(f.mcap)], ["PER / PER forward", `${T.num(f.pe, 1)}x / ${T.num(f.fpe, 1)}x`], ["PBV", T.num(f.pbv) + "x"], ["EV/EBITDA", T.num(f.ev_ebitda, 1) + "x"],
+          h += `<div class="cols"><div><div class="sec">VALUASI</div>${kv([["Kapitalisasi pasar", T.big(f.mcap)], ["PER / PER forward", `${xs(f.pe, 1)} / ${xs(f.fpe, 1)}`], ["PBV", xs(f.pbv)], ["EV/EBITDA", xs(f.ev_ebitda, 1)],
             ["Dividend yield", dy == null ? "-" : (dy * 100).toFixed(1) + "%"], ["Beta", T.num(f.beta)]])}</div>
             <div><div class="sec">PROFITABILITAS</div>${kv([["ROE", f.roe == null ? "-" : (f.roe * 100).toFixed(1) + "%"], ["ROA", f.roa == null ? "-" : (f.roa * 100).toFixed(1) + "%"], ["Margin bersih", f.npm == null ? "-" : (f.npm * 100).toFixed(1) + "%"],
-            ["DER", T.num(f.der) + "x"], f.tp ? ["Target analis (rata-rata)", `${T.fx(f.tp, dp)} ${T.pc(up, 0)} · ${f.n_an || "?"} analis`] : null, ["Industri", esc(f.industry || "-")]])}</div></div>
-            ${f.desc ? `<div class="sec">BISNIS</div><div class="desc">${esc(f.desc)}</div>` : ""}<div class="note">Fundamental: Yahoo Finance, diambil ${esc(f.t)}. Deskripsi dalam bahasa sumber.</div>`;
+            ["DER", xs(f.der)], f.tp ? ["Target analis (rata-rata)", `${T.fx(f.tp, dp)} ${T.pc(up, 0)} · ${f.n_an || "?"} analis`] : null, ["Industri", esc(f.industry || "-")]])}</div></div>
+            ${f.desc ? `<div class="sec">BISNIS</div><div class="desc">${esc(f.desc)}</div>` : ""}<div class="note">Fundamental: Yahoo Finance, diambil ${esc(f.t)}. Deskripsi dalam bahasa sumber.${f.fx ? ` Emiten melapor dalam ${esc(f.fx.cur)}: PER dan PBV dihitung dari laporan tahunan ${esc(f.fx.y)} dengan kurs terakhir, bukan angka 12 bulan berjalan.` : ""}</div>`;
         } else h += `<div class="note">${f === false ? "Fundamental emiten ini belum terambil dari Yahoo Finance (diambil bertahap, mingguan)." : "Memuat fundamental…"}</div>`;
       }
       if (s.unit) h += `<div class="note">Satuan: ${esc(s.unit)}. Kontrak futures bulan terdekat, bukan harga spot.</div>`;
@@ -236,7 +236,7 @@
     if (s.type !== "EQUITY") { p.body.innerHTML = '<div class="err">RV hanya untuk saham. Contoh: BBCA RV.</div>'; return; }
     const peers = () => T.byType("EQUITY", s.grp).filter(x => x.sector === s.sector);
     const med = k => T.median(peers().map(x => COL[k].get(x)));
-    p.body.innerHTML = '<div class="tb"></div><div class="pad" id="med"></div><div class="note">Pembanding: saham sesektor yang dipantau terminal ini, bukan seluruh bursa. Valuasi dari Yahoo Finance.</div>';
+    p.body.innerHTML = '<div class="tb"></div><div class="pad" id="med"></div><div class="note">Pembanding: saham sesektor yang dipantau terminal ini, bukan seluruh bursa. Valuasi dari Yahoo Finance; untuk emiten yang melapor dalam USD, PER dan PBV dihitung dari laporan tahunan terakhir dengan kurs terakhir.</div>';
     T.table(p.body.querySelector(".tb"), p, { cols: cols("code name px mc pe pbv roe dy ytd r1y"), rows: peers, mark: r => r.code === s.code, sort: { id: "mc", dir: -1 } });
     const line = (k, lab, f) => { const m = med(k), v = COL[k].get(s); return m == null || v == null ? "" : `<div>${lab}</div><div>${f(v)} vs median ${f(m)} <span class="${v < m ? "up" : "down"}">(${T.pct(v / m - 1, 0)})</span></div>`; };
     p.body.querySelector("#med").innerHTML = `<div class="sec">${s.code} VS MEDIAN SEKTOR ${esc(s.sector.toUpperCase())} (${peers().length} saham)</div><div class="kv">${line("pe", "PER", v => T.num(v, 1) + "x")}${line("pbv", "PBV", v => T.num(v) + "x")}</div>

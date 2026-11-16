@@ -650,6 +650,23 @@ def main():
                 fund = load(cache / "fund.json", {}) or {}
                 src["fundamental"] = {"ok": False, "n": len(fund), "t": stamp(), "ket": f"gagal: {e}"[:160]}
 
+    # Emiten IDX yang melapor dalam USD: rasio Yahoo mencampur harga rupiah dengan angka laporan dolar (PBV bisa ribuan kali).
+    # Untuk mereka PER dan PBV dihitung ulang dari laporan tahunan terakhir yang dikonversi dengan kurs terakhir.
+    ccy_of = {i["code"]: i["ccy"] for i in inst}
+    usdidr = (quotes.get("USDIDR") or {}).get("p")
+    for code, f in fund.items():
+        cur, ccy = f.get("cur"), ccy_of.get(code)
+        if cur and ccy and cur != ccy:
+            rate = usdidr if (cur == "USD" and ccy == "IDR") else None
+            last = (f.get("years") or [{}])[-1]
+            mc, eq, ni = f.get("mcap"), last.get("eq"), last.get("ni")
+            f["pbv"] = sig(mc / (eq * rate), 4) if rate and mc and eq and eq > 0 else None
+            f["pe"] = sig(mc / (ni * rate), 4) if rate and mc and ni and ni > 0 else None
+            f["fpe"] = f["ev_ebitda"] = f["bvps"] = f["eps"] = None
+            f["fx"] = {"cur": cur, "rate": rate, "y": last.get("y")}
+        for k, lim in (("pbv", 200), ("pe", 2000), ("ev_ebitda", 500)):
+            if f.get(k) is not None and abs(f[k]) > lim:
+                f[k] = None
     for code, f in fund.items():            # kapitalisasi pasar ikut di quotes agar heatmap/screener tidak perlu memuat fund.json
         if code in quotes and f.get("mcap"):
             quotes[code]["mc"] = f["mcap"]

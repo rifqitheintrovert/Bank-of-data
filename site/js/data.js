@@ -49,7 +49,7 @@
     let ws;
     try { ws = new WebSocket("wss://data-stream.binance.vision/stream?streams=" + names.map(n => n.toLowerCase() + "@miniTicker").join("/")); }
     catch (e) { T.live.state = "gagal"; return; }
-    ws.onopen = () => { T.live.state = "live"; };
+    ws.onopen = () => { T.live.state = "live"; if (T.onStatus) T.onStatus(); };
     ws.onmessage = m => {
       let d; try { d = JSON.parse(m.data); } catch (e) { return; }
       d = d.data || d;
@@ -57,7 +57,7 @@
       if (!s || !(np > 0)) return;
       s.dir = np > s.px ? 1 : np < s.px ? -1 : 0; s.px = np; s.live = true; s.liveT = Date.now(); T.dirty = true;
     };
-    ws.onclose = () => { T.live.state = "putus, mencoba lagi"; setTimeout(T.startLive, 15000); };
+    ws.onclose = () => { T.live.state = "putus, mencoba lagi"; if (T.onStatus) T.onStatus(); setTimeout(T.startLive, 15000); };
     ws.onerror = () => { try { ws.close(); } catch (e) { /* sudah tertutup */ } };
   };
 

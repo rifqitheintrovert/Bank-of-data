@@ -49,12 +49,12 @@
         const rows = m.filter(x => x.cty === c); if (!rows.length) return;
         h += `<tr><td colspan="5" class="grp">${name[c]}</td></tr>` + rows.map(x => `<tr><td>${esc(x.name)}</td><td class="amb">${T.num(x.val, x.unit === "ribu" ? 0 : 2)}${x.unit === "%" ? "%" : " " + esc(x.unit)}</td><td class="dim">${T.num(x.prev, x.unit === "ribu" ? 0 : 2)}</td><td class="${old(x.date) ? "warn" : "dim"}">${esc(x.date)}</td><td class="l dim">${esc(x.src)}</td></tr>`).join("");
       });
-      h += '</tbody></table><div class="note">Periode berwarna kuning berarti data lebih tua dari 4 bulan. ${(T.meta.src.makro || {}).ok === null ? "CPI, pengangguran, PDB, dan payrolls butuh secret FRED_API_KEY (gratis, lihat README). " : ""}BI Rate dan kalender rilis tidak tersedia dari sumber gratis yang stabil, jadi tidak ditampilkan.</div>';
+      h += `</tbody></table><div class="note">Periode berwarna kuning berarti data lebih tua dari 4 bulan. ${(T.meta.src.makro || {}).ok === null ? "CPI, pengangguran, PDB, dan payrolls butuh secret FRED_API_KEY (gratis, lihat README). " : ""}BI Rate dan kalender rilis tidak tersedia dari sumber gratis yang stabil, jadi tidak ditampilkan.</div>`;
     } else h += '<div class="err">Data makro belum tersedia. Ketik DATA untuk status sumber.</div>';
     if (wb.length) {
       const ct = ["IDN", "USA", "CHN", "JPN", "IND", "SGP", "MYS", "DEU"];
       h += `<div class="sec pad0">PERBANDINGAN NEGARA (TAHUNAN)</div><table><thead><tr><th>Indikator</th>${ct.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>${wb.map(w =>
-        `<tr><td>${esc(w.name)}</td>${ct.map(c => { const r = w.rows[c]; return r ? `<td title="${esc(r[1])}">${w.unit === "USD" ? T.big(r[0]) : T.num(r[0], 1) + "%"}<span class="yr">${esc(String(r[1]).slice(2))}</span></td>` : '<td class="dim">-</td>'; }).join("")}</tr>`).join("")}</tbody></table>
+        `<tr><td>${esc(w.name)}</td>${ct.map(c => { const r = w.rows[c]; return r ? `<td title="${esc(r[1])}">${w.unit === "USD" ? T.big(r[0]) : T.num(r[0], 1) + "%"}<span class="yr">'${esc(String(r[1]).slice(2))}</span></td>` : '<td class="dim">-</td>'; }).join("")}</tr>`).join("")}</tbody></table>
         <div class="note">Sumber: World Bank. Angka kecil di kanan = tahun data. T = triliun, M = miliar (USD).</div>`;
     }
     p.body.innerHTML = h;

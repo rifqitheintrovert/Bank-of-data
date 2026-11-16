@@ -109,7 +109,7 @@
     });
     const saved = T.store.get("cmds", null);
     panes.forEach((p, i) => run((saved && saved[i]) || DEFAULTS[i], p));
-    setActive(0); applyLayout(); clocks(); status(); tape(); T.startLive();
+    setActive(0); applyLayout(); clocks(); status(); tape(); T.onStatus = status; T.startLive();
     setInterval(() => { if (!T.dirty) return; T.dirty = false; T.checkAlerts(); panes.forEach(p => { if (visible(p) && p.tick && !p.el.contains(document.activeElement)) try { p.tick(); } catch (e) { /* panel sedang diganti */ } }); }, 1000);
     setInterval(tape, 5000); setInterval(clocks, 15000); setInterval(status, 30000); setInterval(refresh, 5 * 60000);
     T.checkAlerts();
