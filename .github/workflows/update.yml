@@ -45,6 +45,8 @@ jobs:
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}   # opsional
         run: python -m engine.build --out site/data --cache .cache
+      - name: Tandai versi berkas (agar browser tidak memakai JS/CSS lama setelah deploy)
+        run: sed -i "s/__V__/${GITHUB_SHA::8}/g" site/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
