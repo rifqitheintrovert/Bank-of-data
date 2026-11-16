@@ -64,7 +64,7 @@
   const saveCmds = () => T.store.set("cmds", panes.map(p => p.cmd));
 
   function status() {
-    const age = T.ageMin(), m = T.meta, bad = Object.values(m.src).filter(s => !s.ok).length;
+    const age = T.ageMin(), m = T.meta, bad = Object.values(m.src).filter(s => s.ok === false).length;
     $("#status").innerHTML = `<span class="${age > 180 ? "no" : "ok"}">● Data ${T.wib(m.gen)} · ${age < 90 ? age + " mnt lalu" : Math.round(age / 60) + " jam lalu"}</span>
       <span class="${T.live.state === "live" ? "ok" : "no"}">● Kripto ${T.esc(T.live.state)}</span><span>${Object.keys(U).length} instrumen</span>
       ${bad ? `<span class="no">${bad} sumber bermasalah, ketik DATA</span>` : ""}<span class="dim">Yahoo Finance tertunda ±15 menit · bukan rekomendasi investasi</span>`;
@@ -72,7 +72,7 @@
       : age > 24 * 60 ? `<div class="warn-bar">Data terakhir dibuat ${Math.round(age / 60)} jam lalu. Cek tab Actions di GitHub: pembaruan otomatis mungkin berhenti.</div>` : "";
   }
   function tape() {
-    const codes = ["IHSG", "LQ45", "USDIDR", "XAUUSD", "WTI", "COAL", "SPX", "NDX", "N225", "HSI", "US10Y", "BTCUSD", "ETHUSD", "BBCA", "BBRI", "BMRI", "TLKM", "ASII", "MEDC"].filter(c => U[c]);
+    const codes = ["IHSG", "LQ45", "USDIDR", "XAUUSD", "WTI", "BRENT", "SPX", "NDX", "N225", "HSI", "US10Y", "BTCUSD", "ETHUSD", "BBCA", "BBRI", "BMRI", "TLKM", "ASII", "MEDC"].filter(c => U[c]);
     const one = codes.map(c => { const s = U[c]; return `<span><b class="sym">${c}</b> ${T.px(s)} ${T.COL_DEF.chg.html(T.COL_DEF.chg.get(s), s)}</span>`; }).join("");
     $("#tape").innerHTML = one + one;
   }

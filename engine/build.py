@@ -14,6 +14,7 @@ import io
 import json
 import logging
 import math
+import os
 import re
 import time
 from datetime import datetime, timedelta, timezone
@@ -74,15 +75,18 @@ def _split(df, symbols):
 
 
 def fetch_yahoo(symbols, interval="1d", period="5y", chunk=90, retries=3):
-    """OHLCV per simbol. Dipecah per `chunk` agar ramah rate-limit; simbol yang gagal dicoba ulang satu per satu."""
+    """OHLCV per simbol. Dipecah per `chunk` agar ramah rate-limit; simbol yang gagal dicoba ulang satu per satu.
+    `period`: periode Yahoo ("5d", "5y") ATAU tanggal mulai "YYYY-MM-DD"."""
     import yfinance as yf
+
+    span = {"start": period} if len(period) == 10 and period[4] == "-" else {"period": period}
 
     res, last_err = {}, None
     for i in range(0, len(symbols), chunk):
         part = symbols[i:i + chunk]
         for attempt in range(retries):
             try:
-                df = yf.download(part, period=period, interval=interval, group_by="ticker",
+                df = yf.download(part, **span, interval=interval, group_by="ticker",
                                  auto_adjust=False, threads=True, progress=False, timeout=30)
                 got = _split(df, part)
                 if got:
@@ -94,7 +98,7 @@ def fetch_yahoo(symbols, interval="1d", period="5y", chunk=90, retries=3):
         time.sleep(1.0)
     for s in [s for s in symbols if s not in res][:40]:
         try:
-            one = yf.download(s, period=period, interval=interval, auto_adjust=False, threads=False, progress=False, timeout=30)
+            one = yf.download(s, **span, interval=interval, auto_adjust=False, threads=False, progress=False, timeout=30)
             if one is not None and not one.empty:
                 if isinstance(one.columns, pd.MultiIndex):
                     one.columns = one.columns.get_level_values(0)
@@ -155,17 +159,20 @@ def quote(df, ann=252):
             "sp": [sig(x, 5) for x in c.tail(30)]}
 
 
-# ---------------------------------------------------------------- FRED (makro AS + beberapa seri Indonesia, kurva UST)
-def fred(sid: str, start: str):
-    r = requests.get("https://fred.stlouisfed.org/graph/fredgraph.csv", params={"id": sid, "cosd": start}, headers=UA, timeout=25)
+# ---------------------------------------------------------------- Makro
+# fred.stlouisfed.org/graph menolak IP GitHub Actions (timeout), jadi:
+#   - kurva US Treasury + Fed funds: DBnomics (cermin rilis H.15 The Fed), tanpa key
+#   - indikator makro lain: API resmi FRED, hanya bila secret FRED_API_KEY diisi (gratis)
+#   - perbandingan negara: World Bank
+def fred(sid: str, start: str, key: str):
+    r = requests.get("https://api.stlouisfed.org/fred/series/observations", headers=UA, timeout=20,
+                     params={"series_id": sid, "api_key": key, "file_type": "json", "observation_start": start})
     r.raise_for_status()
     rows = []
-    for i, line in enumerate(csv.reader(io.StringIO(r.text))):
-        if i == 0 or len(line) < 2:
-            continue
+    for o in r.json().get("observations", []):
         try:
-            rows.append((line[0], float(line[1])))
-        except ValueError:
+            rows.append((o["date"], float(o["value"])))
+        except (ValueError, KeyError):
             continue
     return rows
 
@@ -182,17 +189,21 @@ MACRO = [  # (negara, nama, seri FRED, satuan, cara hitung)
     ("ID", "Inflasi CPI YoY", "IDNCPIALLMINMEI", "%", "yoy"),
     ("ID", "Suku bunga antarbank 3 bulan", "IR3TIB01IDM156N", "%", "level"),
 ]
-CURVE = [("1M", "DGS1MO"), ("3M", "DGS3MO"), ("6M", "DGS6MO"), ("1Y", "DGS1"), ("2Y", "DGS2"), ("3Y", "DGS3"),
-         ("5Y", "DGS5"), ("7Y", "DGS7"), ("10Y", "DGS10"), ("20Y", "DGS20"), ("30Y", "DGS30")]
+H15 = [("1M", "RIFLGFCM01_N.B"), ("3M", "RIFLGFCM03_N.B"), ("6M", "RIFLGFCM06_N.B"), ("1Y", "RIFLGFCY01_N.B"), ("2Y", "RIFLGFCY02_N.B"),
+       ("3Y", "RIFLGFCY03_N.B"), ("5Y", "RIFLGFCY05_N.B"), ("7Y", "RIFLGFCY07_N.B"), ("10Y", "RIFLGFCY10_N.B"), ("20Y", "RIFLGFCY20_N.B"),
+       ("30Y", "RIFLGFCY30_N.B")]
+FEDFUNDS = "RIFSPFF_N.B"
+CURVE = [(t, c) for t, c in H15]
 
 
-def fetch_macro():
+def fetch_macro(key: str):
     start = (NOW() - timedelta(days=365 * 3)).strftime("%Y-%m-%d")
     cutoff = (NOW() - timedelta(days=540)).strftime("%Y-%m-%d")
-    out, fails = [], []
+    out, fails, streak = [], [], 0
     for cty, name, sid, unit, how in MACRO:
         try:
-            rows = fred(sid, start)
+            rows = fred(sid, start, key)
+            streak = 0
             if not rows or rows[-1][0] < cutoff:        # seri sudah tidak diperbarui -> jangan tampilkan sebagai angka terkini
                 fails.append(sid + " (usang)")
                 continue
@@ -200,6 +211,7 @@ def fetch_macro():
             pv = rows[-2][1] if len(rows) > 1 else None
             if how == "yoy":
                 by = dict(rows)
+
                 def yoy(date):
                     b = by.get(str(int(date[:4]) - 1) + date[4:])
                     return (by[date] / b - 1) * 100 if b else None
@@ -214,24 +226,30 @@ def fetch_macro():
             out.append({"cty": cty, "name": name, "val": sig(v, 4), "prev": sig(pv, 4), "unit": unit, "date": d, "src": "FRED " + sid})
         except Exception as e:  # noqa: BLE001
             fails.append(f"{sid} ({type(e).__name__})")
-        time.sleep(0.25)
+            streak += 1
+            if streak >= 2:                              # sumber sedang tidak bisa diakses: jangan habiskan waktu run
+                break
+        time.sleep(0.2)
     if not out:
         raise RuntimeError("semua seri FRED gagal: " + ", ".join(fails))
     return out, fails
 
 
 def fetch_curve():
-    start = (NOW() - timedelta(days=420)).strftime("%Y-%m-%d")
+    """Kurva par yield US Treasury + Fed funds efektif dari DBnomics (FED/H15), satu permintaan."""
+    ids = ",".join("FED/H15/" + c for _, c in H15 + [("FF", FEDFUNDS)])
+    r = requests.get("https://api.db.nomics.world/v22/series", params={"series_ids": ids, "observations": 1}, headers=UA, timeout=40)
+    r.raise_for_status()
     data = {}
-    for ten, sid in CURVE:
-        try:
-            data[ten] = fred(sid, start)
-        except Exception as e:  # noqa: BLE001
-            log.warning("kurva %s gagal: %s", sid, e)
-        time.sleep(0.25)
-    if len(data) < 6:
-        raise RuntimeError("kurva UST: hanya %d tenor" % len(data))
-    last_date = max(rows[-1][0] for rows in data.values() if rows)
+    for d in r.json().get("series", {}).get("docs", []):
+        rows = [(p, float(v)) for p, v in zip(d.get("period", []), d.get("value", [])) if isinstance(v, (int, float))]
+        if rows:
+            data[d["series_code"]] = rows[-400:]
+    tenors = [t for t, c in H15 if c in data]
+    if len(tenors) < 6:
+        raise RuntimeError("kurva UST: hanya %d tenor" % len(tenors))
+    code = dict(H15)
+    last_date = max(data[code[t]][-1][0] for t in tenors)
 
     def at(rows, date):
         best = None
@@ -243,12 +261,13 @@ def fetch_curve():
     def shift(days):
         return (datetime.strptime(last_date, "%Y-%m-%d") - timedelta(days=days)).strftime("%Y-%m-%d")
 
-    tenors = [t for t, _ in CURVE if data.get(t)]
-    return {"date": last_date, "tenors": tenors,
-            "now": [at(data[t], last_date) for t in tenors],
-            "m1": [at(data[t], shift(30)) for t in tenors],
-            "y1": [at(data[t], shift(365)) for t in tenors],
-            "src": "FRED (US Treasury par yield, seri DGS)"}
+    out = {"date": last_date, "tenors": tenors, "now": [at(data[code[t]], last_date) for t in tenors],
+           "m1": [at(data[code[t]], shift(30)) for t in tenors], "y1": [at(data[code[t]], shift(365)) for t in tenors],
+           "src": "The Fed H.15 lewat DBnomics"}
+    ff = data.get(FEDFUNDS)
+    if ff:
+        out["ff"] = {"val": ff[-1][1], "prev": ff[-2][1] if len(ff) > 1 else None, "date": ff[-1][0]}
+    return out
 
 
 # ---------------------------------------------------------------- World Bank (indikator tahunan lintas negara)
@@ -259,20 +278,24 @@ WB_CTY = ["IDN", "USA", "CHN", "JPN", "IND", "SGP", "MYS", "DEU"]
 
 
 def fetch_wb():
-    out = []
+    out, streak = [], 0
     for ind, name, unit in WB:
         try:
             r = requests.get(f"https://api.worldbank.org/v2/country/{';'.join(WB_CTY)}/indicator/{ind}",
-                             params={"format": "json", "mrnev": 1, "per_page": 100}, headers=UA, timeout=25)
+                             params={"format": "json", "mrnev": 1, "per_page": 100}, headers=UA, timeout=20)
             r.raise_for_status()
             rows = {x["countryiso3code"]: [sig(x["value"], 5), x["date"]] for x in r.json()[1] if x.get("value") is not None}
             if rows:
                 out.append({"ind": ind, "name": name, "unit": unit, "rows": rows})
+            streak = 0
         except Exception as e:  # noqa: BLE001
             log.warning("World Bank %s gagal: %s", ind, e)
+            streak += 1
+            if streak >= 2:
+                break
         time.sleep(0.25)
     if not out:
-        raise RuntimeError("World Bank gagal semua")
+        raise RuntimeError("World Bank tidak merespons")
     return out
 
 
@@ -525,18 +548,37 @@ def main():
         daily, intra = demo_frames(inst)
         src["harga"] = {"ok": True, "n": len(daily), "t": stamp(), "ket": "DEMO acak"}
     else:
-        daily, err = fetch_yahoo(syms, "1d", "5y")
+        daily, err = fetch_yahoo(syms, "1d", (NOW() - timedelta(days=365 * 5 + 10)).strftime("%Y-%m-%d"))
+        daily = {k: norm_daily(v) for k, v in daily.items()}
+        recent, _ = fetch_yahoo(syms, "1d", "5d")        # bar terbaru (Yahoo kadang belum memuatnya di unduhan panjang)
+        for k, r in recent.items():
+            r = norm_daily(r)
+            daily[k] = pd.concat([daily[k][daily[k].index < r.index.min()], r]) if k in daily else r
         src["harga_harian"] = {"ok": bool(daily), "n": len(daily), "dari": len(syms), "t": stamp(), "ket": "Yahoo Finance, harian 5 tahun" + (f"; error terakhir: {err}" if err and len(daily) < len(syms) else "")}
         intra, err2 = fetch_yahoo(syms, "15m", "5d")
         src["harga_intraday"] = {"ok": bool(intra), "n": len(intra), "dari": len(syms), "t": stamp(), "ket": "Yahoo Finance, 15 menit 5 hari"}
 
-    quotes, meta, missing = {}, {}, []
+    quotes, meta, missing, synth = {}, {}, [], 0
+    stale_cut = pd.Timestamp(NOW().date()) - pd.Timedelta(days=14)
     for i in inst:
         df = daily.get(i["y"])
         if df is None or len(df) < 2:
             missing.append(i["code"])
             continue
         df = norm_daily(df)
+        if df.index[-1] < stale_cut:                     # sumber berhenti memperbarui: jangan tampilkan sebagai harga terkini
+            missing.append(f"{i['code']} (terakhir {df.index[-1]:%Y-%m-%d})")
+            continue
+        m = intra.get(i["y"])
+        if m is not None and len(m) > 1 and i["type"] in ("EQUITY", "INDEX"):
+            mt = pd.to_datetime(m.index)
+            mt = mt.tz_localize("UTC") if mt.tz is None else mt.tz_convert("UTC")
+            day = pd.Timestamp(mt[-1].strftime("%Y-%m-%d"))
+            if day > df.index[-1]:                       # sesi sudah berjalan tapi bar hariannya belum ada: susun dari bar 15 menit
+                ses = m[mt > mt[-1] - pd.Timedelta(hours=12)]
+                df.loc[day, ["Open", "High", "Low", "Close", "Volume"]] = [float(ses["Open"].iloc[0]), float(ses["High"].max()), float(ses["Low"].min()),
+                                                                          float(ses["Close"].iloc[-1]), float(ses["Volume"].fillna(0).sum())]
+                synth += 1
         ann = 365 if i["type"] == "CRYPTO" else 252
         try:
             quotes[i["code"]] = quote(df, ann)
@@ -546,11 +588,16 @@ def main():
             continue
         meta[i["code"]] = {k: v for k, v in i.items() if k not in ("code",) and v is not None}
         dump(out / "hist" / f"{i['code']}.json", series_json(df))
-        m = intra.get(i["y"])
         if m is not None and len(m) > 1:
             dump(out / "intra" / f"{i['code']}.json", series_json(m, intraday=True))
             quotes[i["code"]]["it"] = 1
     log.info("Harga: %d instrumen, %d tanpa data: %s", len(quotes), len(missing), " ".join(missing))
+    by_day = {}
+    for q in quotes.values():
+        by_day[q["d"]] = by_day.get(q["d"], 0) + 1
+    log.info("Tanggal bar terakhir: %s; bar harian disusun dari intraday: %d", json.dumps(by_day, sort_keys=True), synth)
+    if not a.demo and synth:
+        src["harga_harian"]["ket"] += f"; {synth} bar hari terakhir disusun dari bar 15 menit"
     if len(quotes) < 0.5 * len(inst):
         raise SystemExit("Terlalu sedikit instrumen berhasil diambil; deploy dibatalkan supaya data lama tetap tampil.")
 
@@ -571,11 +618,19 @@ def main():
     if a.demo:
         fund, news, econ = demo_extras(inst)
     else:
-        macro_res, s = cached("macro", fetch_macro)
-        macro, fails = macro_res if macro_res else ([], [])
-        src["makro"] = {**s, "n": len(macro), "ket": s.get("ket") or ("FRED" + (("; seri dilewati: " + ", ".join(fails)) if fails else ""))}
         curve, s = cached("curve", fetch_curve)
-        src["kurva_ust"] = {**s, "ket": s.get("ket") or "FRED seri DGS"}
+        src["kurva_ust"] = {**s, "ket": s.get("ket") or "The Fed H.15 lewat DBnomics"}
+        key = os.environ.get("FRED_API_KEY", "").strip()
+        if key:
+            macro_res, s = cached("macro", lambda: fetch_macro(key))
+            macro, fails = macro_res if macro_res else ([], [])
+            src["makro"] = {**s, "n": len(macro), "ket": s.get("ket") or ("API FRED" + (("; seri dilewati: " + ", ".join(fails)) if fails else ""))}
+        else:
+            macro = []
+            src["makro"] = {"ok": None, "n": 0, "t": None, "ket": "nonaktif: isi secret FRED_API_KEY (gratis) untuk CPI, pengangguran, PDB, payrolls"}
+        if curve and curve.get("ff"):
+            f = curve["ff"]
+            macro.append({"cty": "US", "name": "Fed Funds efektif", "val": f["val"], "prev": f["prev"], "unit": "%", "date": f["date"], "src": "The Fed H.15"})
         wb, s = cached("wb", fetch_wb)
         src["world_bank"] = {**s, "n": len(wb or []), "ket": s.get("ket") or "World Bank API, tahunan"}
         econ = {"macro": macro, "curve": curve, "wb": wb or []}

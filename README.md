@@ -22,10 +22,10 @@ Ketik `[KODE] [FUNGSI]` lalu Enter, mis. `BBCA GP`, `MEDC FA`, `XAUUSD`, `WEI`. 
 | `RV` | Valuasi relatif terhadap median sektor | Yahoo Finance |
 | `CN` / `TOP` | Berita per instrumen / berita pasar per kategori (judul + tautan ke penerbit) | Google News RSS, CNBC Indonesia |
 | `FXC` | Matriks kurs silang 9 mata uang + monitor pasangan | Yahoo Finance |
-| `CMDT` | Komoditas (futures bulan terdekat): emas, perak, minyak, gas, batu bara API2, tembaga, pertanian | Yahoo Finance |
+| `CMDT` | Komoditas (futures bulan terdekat): emas, perak, platinum, minyak, gas, tembaga, pertanian | Yahoo Finance |
 | `CRYP` | Kripto, **harga live** | Binance (WebSocket) + Yahoo Finance |
-| `YCRV` | Kurva US Treasury: terakhir vs 1 bulan vs 1 tahun lalu | FRED (seri DGS) |
-| `ECO` | Makro AS dan Indonesia; perbandingan 8 negara | FRED, World Bank |
+| `YCRV` | Kurva US Treasury: terakhir vs 1 bulan vs 1 tahun lalu | The Fed H.15 (lewat DBnomics) |
+| `ECO` | Fed funds, makro AS/Indonesia (opsional, lihat di bawah), perbandingan 8 negara | The Fed, FRED, World Bank |
 | `OMON` | Rantai opsi **teoretis** Black-Scholes dari volatilitas historis; r dan volatilitas bisa diubah | hitungan sendiri |
 | `PORT` / `ALRT` | Portofolio (nilai dan untung/rugi dalam rupiah) dan alert harga; tersimpan di browser | localStorage |
 | `DATA` | Status tiap sumber, waktu data dibuat, instrumen yang tidak punya data | engine |
@@ -36,7 +36,7 @@ Ketik `[KODE] [FUNGSI]` lalu Enter, mis. `BBCA GP`, `MEDC FA`, `XAUUSD`, `WEI`. 
 GitHub Actions (cron)                          GitHub Pages
 ┌─────────────────────────────────┐            ┌───────────────────────────┐
 │ Yahoo Finance  harga, fundamental│            │ index.html + js/ + css/   │
-│ FRED           makro, kurva UST  │──engine──▶ │ data/quotes.json          │──▶ Browser / HP
+│ The Fed/FRED   kurva UST, makro  │──engine──▶ │ data/quotes.json          │──▶ Browser / HP
 │ World Bank     indikator tahunan │  (Python)  │ data/hist, intra, fund,   │
 │ Google News, CNBC ID  berita     │            │      econ, news           │
 └─────────────────────────────────┘            └───────────────────────────┘
@@ -53,6 +53,13 @@ GitHub Actions (cron)                          GitHub Pages
 2. Tab **Actions → Update Bank of Data → Run workflow**, atau cukup push ke `main`.
 3. Buka `https://USERNAME.github.io/Bank-of-data/`. Bisa dipasang ke layar utama HP (Add to Home Screen).
 
+### Opsional: makro lengkap
+Settings → Secrets and variables → Actions → **New repository secret**:
+
+| Secret | Fungsi |
+|---|---|
+| `FRED_API_KEY` | CPI, pengangguran, PDB, payrolls AS dan beberapa seri Indonesia di `ECO`. Key gratis dari fred.stlouisfed.org (akun → API Keys). Tanpa key, bagian itu nonaktif. |
+
 ## Jalankan di komputer sendiri
 
 ```bash
@@ -67,8 +74,10 @@ Menambah instrumen: edit `engine/universe.py` (kode, simbol Yahoo, nama). Saham 
 ## Keterbatasan (penting)
 
 - **Bukan real-time.** Yahoo Finance tertunda ±10-15 menit, ditambah jeda jadwal 30 menit (atau 2 jam di luar jam BEI) dan keterlambatan cron GitHub 5-20 menit. Hanya kripto yang live.
-- **Komoditas = futures, bukan spot.** `XAUUSD` memakai futures emas COMEX (`GC=F`), selisihnya beberapa dolar dari spot. CPO, nikel, dan batu bara Newcastle tidak ada di sumber gratis.
-- **Kurva SBN dan BI Rate tidak tersedia** dari sumber gratis yang stabil (PHEI/IBPA berbayar). Yang ada hanya imbal hasil 10Y Indonesia bulanan dari FRED bila serinya masih diperbarui. Kalender rilis ekonomi juga tidak ada.
+- **Komoditas = futures, bukan spot.** `XAUUSD` memakai futures emas COMEX (`GC=F`), selisihnya beberapa dolar dari spot. CPO, nikel, dan batu bara tidak ada di sumber gratis (kontrak batu bara di Yahoo sudah tidak diperbarui, jadi dibuang).
+- **Kurva SBN dan BI Rate tidak tersedia** dari sumber gratis yang stabil (PHEI/IBPA berbayar). Kalender rilis ekonomi juga tidak ada.
+- **Makro terbatas tanpa key.** Situs FRED menolak akses dari server GitHub Actions, jadi tanpa `FRED_API_KEY` yang tampil hanya Fed funds efektif dan kurva UST (rilis H.15, terlambat beberapa hari kerja) serta tabel World Bank (tahunan; API-nya kadang lambat atau mati).
+- **Bar harian hari berjalan** kadang belum ada di Yahoo; engine lalu menyusunnya dari bar 15 menit (volume bisa sedikit berbeda dari angka resmi bursa). Jumlahnya tercatat di `DATA`.
 - **Fundamental dari Yahoo Finance**, bukan dari laporan keuangan resmi: sebagian pos kosong (terutama bank), emiten yang melapor dalam USD ditampilkan dalam mata uang laporannya, dan bisa terlambat dari rilis terbaru. Cocokkan dengan laporan emiten sebelum dipakai riset.
 - **Opsi hanya teoretis.** BEI tidak punya opsi saham yang likuid; `OMON` bukan kuotasi pasar.
 - **Berita hanya judul**, dicocokkan ke instrumen secara otomatis dari kode atau nama, jadi bisa meleset.

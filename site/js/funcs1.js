@@ -73,7 +73,7 @@
     monitor(p, () => order.flatMap(g => [{ hdr: g }, ...T.byType("INDEX", g)]), "code name px chg r1w r1m ytd r1y d", DELAY);
   });
   reg("CMDT", "Komoditas", "Futures bulan terdekat: logam, energi, pertanian", false, p =>
-    monitor(p, () => T.byType("COMDTY"), "code name px chg r1w r1m ytd unit d", DELAY + " Harga adalah kontrak futures, bukan spot. CPO, nikel, dan batu bara Newcastle tidak tersedia di sumber gratis."));
+    monitor(p, () => T.byType("COMDTY"), "code name px chg r1w r1m ytd unit d", DELAY + " Harga adalah kontrak futures, bukan spot. CPO, nikel, dan batu bara tidak tersedia di sumber gratis."));
   reg("CRYP", "Kripto", "Harga live dari Binance, return dari Yahoo Finance", false, p =>
     monitor(p, () => T.byType("CRYPTO"), "code name px chg r1w r1m ytd hv d", `Harga live: Binance (${esc(T.live.state)}). %1H dihitung terhadap penutupan harian UTC terakhir dari Yahoo Finance.`));
   reg("EQS", "Screener saham", "Saham IDX dan AS: return, likuiditas, valuasi; urutkan dan saring per sektor", false, p => {

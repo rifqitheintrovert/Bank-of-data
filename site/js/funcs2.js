@@ -22,7 +22,7 @@
     const idNote = id10 ? `Indonesia 10Y: <b class="amb">${T.num(id10.val)}%</b> per ${esc(id10.date)} (${esc(id10.src)}, bulanan).` : "Kurva SBN Indonesia tidak tersedia dari sumber gratis (PHEI/IBPA berbayar).";
     if (!c) {
       const r = T.byType("RATE");
-      p.body.innerHTML = `<div class="err">Kurva lengkap (FRED) belum tersedia. Menampilkan titik dari Yahoo Finance.</div><div class="tb"></div><div class="note">${idNote}</div>`;
+      p.body.innerHTML = `<div class="err">Kurva lengkap (The Fed H.15) belum tersedia. Menampilkan titik dari Yahoo Finance.</div><div class="tb"></div><div class="note">${idNote}</div>`;
       T.table(p.body.querySelector(".tb"), p, { cols: cols("code name px chg d"), rows: () => r });
       return;
     }
@@ -37,7 +37,7 @@
   });
 
   /* ---- ECO: makro ---- */
-  reg("ECO", "Indikator ekonomi", "Makro AS dan Indonesia (FRED), perbandingan negara (World Bank)", false, async (p, alive) => {
+  reg("ECO", "Indikator ekonomi", "Suku bunga dan makro (The Fed, FRED), perbandingan negara (World Bank)", false, async (p, alive) => {
     p.body.innerHTML = '<div class="pad dim">Memuat…</div>';
     let e; try { e = await T.get("econ"); } catch (x) { p.body.innerHTML = `<div class="err">${esc(x.message)}</div>`; return; }
     if (!alive()) return;
@@ -49,8 +49,8 @@
         const rows = m.filter(x => x.cty === c); if (!rows.length) return;
         h += `<tr><td colspan="5" class="grp">${name[c]}</td></tr>` + rows.map(x => `<tr><td>${esc(x.name)}</td><td class="amb">${T.num(x.val, x.unit === "ribu" ? 0 : 2)}${x.unit === "%" ? "%" : " " + esc(x.unit)}</td><td class="dim">${T.num(x.prev, x.unit === "ribu" ? 0 : 2)}</td><td class="${old(x.date) ? "warn" : "dim"}">${esc(x.date)}</td><td class="l dim">${esc(x.src)}</td></tr>`).join("");
       });
-      h += '</tbody></table><div class="note">Periode berwarna kuning berarti data lebih tua dari 4 bulan. BI Rate dan kalender rilis tidak tersedia dari sumber gratis yang stabil, jadi tidak ditampilkan.</div>';
-    } else h += '<div class="err">Data makro FRED belum tersedia.</div>';
+      h += '</tbody></table><div class="note">Periode berwarna kuning berarti data lebih tua dari 4 bulan. ${(T.meta.src.makro || {}).ok === null ? "CPI, pengangguran, PDB, dan payrolls butuh secret FRED_API_KEY (gratis, lihat README). " : ""}BI Rate dan kalender rilis tidak tersedia dari sumber gratis yang stabil, jadi tidak ditampilkan.</div>';
+    } else h += '<div class="err">Data makro belum tersedia. Ketik DATA untuk status sumber.</div>';
     if (wb.length) {
       const ct = ["IDN", "USA", "CHN", "JPN", "IND", "SGP", "MYS", "DEU"];
       h += `<div class="sec pad0">PERBANDINGAN NEGARA (TAHUNAN)</div><table><thead><tr><th>Indikator</th>${ct.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>${wb.map(w =>
@@ -170,7 +170,7 @@
     const m = T.meta, age = T.ageMin();
     p.body.innerHTML = `<div class="pad"><div class="kv"><div>Data dibuat</div><div>${T.wib(m.gen)} (${age} menit lalu)</div><div>Instrumen berdata</div><div>${Object.keys(U).length}</div><div>Harga kripto live</div><div>${esc(T.live.state)}</div></div></div>
       <table><thead><tr><th>Sumber</th><th>Status</th><th>Jumlah</th><th>Waktu</th><th class="l">Keterangan</th></tr></thead><tbody>${Object.keys(m.src).map(k => { const s = m.src[k];
-        return `<tr><td>${esc(k.replace(/_/g, " "))}</td><td class="${s.ok ? "up" : "down"}">${s.ok ? "OK" : "GAGAL"}</td><td>${s.n == null ? "-" : s.n + (s.dari ? "/" + s.dari : "")}</td><td class="dim">${s.t ? T.wib(s.t) : "-"}</td><td class="l dim wrap">${esc(s.ket || "")}</td></tr>`; }).join("")}</tbody></table>
+        return `<tr><td>${esc(k.replace(/_/g, " "))}</td><td class="${s.ok ? "up" : s.ok === null ? "dim" : "down"}">${s.ok ? "OK" : s.ok === null ? "NONAKTIF" : "GAGAL"}</td><td>${s.n == null ? "-" : s.n + (s.dari ? "/" + s.dari : "")}</td><td class="dim">${s.t ? T.wib(s.t) : "-"}</td><td class="l dim wrap">${esc(s.ket || "")}</td></tr>`; }).join("")}</tbody></table>
       <div class="pad"><div class="sec">INSTRUMEN TANPA DATA DI SUMBER</div><div class="dim">${m.missing.length ? m.missing.map(esc).join(", ") : "Tidak ada."}</div></div>
       <div class="note">Data diperbarui otomatis oleh GitHub Actions: tiap 30 menit saat jam bursa BEI, tiap 2 jam di luar itu. Halaman ini mengecek data baru tiap 5 menit.</div>`;
   });

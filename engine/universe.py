@@ -25,7 +25,6 @@ INDEX = [
     ("SENSEX", "^BSESN", "BSE Sensex", "Asia-Pasifik"),
     ("STI", "^STI", "Straits Times", "Asia-Pasifik"),
     ("KLCI", "^KLSE", "FBM KLCI", "Asia-Pasifik"),
-    ("SET", "^SET.BK", "SET Thailand", "Asia-Pasifik"),
     ("AS51", "^AXJO", "S&P/ASX 200", "Asia-Pasifik"),
 ]
 # (kode, simbol Yahoo, nama, desimal)
@@ -52,7 +51,6 @@ COMDTY = [
     ("WTI", "CL=F", "Minyak mentah WTI", "USD/bbl", 2),
     ("BRENT", "BZ=F", "Minyak mentah Brent", "USD/bbl", 2),
     ("NATGAS", "NG=F", "Gas alam Henry Hub", "USD/MMBtu", 3),
-    ("COAL", "MTF=F", "Batu bara API2 Rotterdam", "USD/ton", 2),
     ("CORN", "ZC=F", "Jagung CBOT", "USc/bu", 2),
     ("WHEAT", "ZW=F", "Gandum CBOT", "USc/bu", 2),
     ("SOY", "ZS=F", "Kedelai CBOT", "USc/bu", 2),
